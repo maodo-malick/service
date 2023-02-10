@@ -1,0 +1,4 @@
+{
+    "jwtPrivateKey":"Service_jwtPrivateKeys",
+    "db":"mongodb://localhost/fencyfy"
+}
