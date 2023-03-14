@@ -1,6 +1,7 @@
 const Joi = require('joi');
 Joi.ObjectId = require('joi-objectid')(Joi);
 const mongoose = require('mongoose');
+const {Schema} = require('mongoose');
 const productSchema =  new mongoose.Schema(
   {
   name: {
@@ -25,11 +26,35 @@ const productSchema =  new mongoose.Schema(
   price:{
       type: Number,
   }, 
-  image:{
+  image:[{
     data:Buffer,
    contentType: String
-}
+  }
+  ],
+ store:{
+    type:Schema.Types.ObjectId,
+    ref:'Store'
+ },
+ owner:{
+   type:Schema.Types.ObjectId,
+   ref:'User'
+ }
+},
+{timestamps:true}
+);
+productSchema.virtual('storeProduct',{
+  ref:'Store',
+  localField:'_id',
+  foreignField:'store',
 });
+productSchema.virtual('userProduct',{
+  ref:'User',
+  localField:'_id',
+  foreignField:'user'
+})
+productSchema.set('toObject',{virtuals:true});
+productSchema.set('toJSON',{virtuals:true});
+
 
 
 function validateProduct(product) {
@@ -38,7 +63,9 @@ function validateProduct(product) {
      category: Joi.string(),
     tag: Joi.string(),
     price: Joi.number(),
-    numberInStock: Joi.number()
+    numberInStock: Joi.number(),
+      storeId: Joi.objectId(),
+       owner: Joi.objectId()
   };
 
   return Joi.validate(product, schema);

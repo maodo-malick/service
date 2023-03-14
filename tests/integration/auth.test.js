@@ -1,14 +1,16 @@
 const {User}= require('../../models/user');
 const {Product}= require('../../models/products');
 const request = require('supertest');
+let server;
 describe('auth middleware',() =>{
-    beforeEach(()  => { server = require('../../index'); })
+    beforeEach(()  => { server = require('../../index'); });
     afterEach(async() => {
-      // await Product.remove({});
-        server.close();
+      await server.close();
+      await Product.remove({});
      });
 
      let token;
+     
 
     const exec = () => {
            return request(server)
@@ -22,7 +24,7 @@ describe('auth middleware',() =>{
  });
 
     it('should return 401 if no token is provided', async() =>{
-        token = '';
+        token = 'a';
         const res =  await exec();
         expect(res.status).toBe(401);
     });

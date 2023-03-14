@@ -1,30 +1,30 @@
 const admin = require('../middleware/admin');
 const auth = require('../middleware/auth');
 const {Store, validate} = require('../models/store');
+const {Product} = require('../models/products');
 const express = require('express');
-const { Product } = require('../models/Products');
+
 const router = express.Router();
 
 router.get('/',auth, async (req, res) => {
-  const stores = await Store.find().sort('name');
-  res.send(stores);
+  const store = await Store.find().sort('designation');
+  res.send(store);
 });
 
 router.post('/',[auth,admin], async (req, res) => {
   const { error } = validate(req.body); 
+  const product = await Product.findById(req.body.productId);
+  if(!product) return res.status(400).send('No product with that given Id');
   if (error) return res.status(400).send(error.details[0].message);
-
-    const product = await Product.findById(req.body.productId);
-    if(!product) return res.status(400).send('No product with that given Id');
-  
   let store = new Store({ 
       designation: req.body.designation,
       adresse:  req.body.adresse,
       email:  req.body.email,
       phone:  req.body.phone,
       product:{
-          _id: product._id
-      }
+        _id: product._id
+    }
+     
     });
   store = await store.save();
   

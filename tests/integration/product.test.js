@@ -7,8 +7,8 @@ const mongoose = require('mongoose');
 describe('/api/products',()=>{
     beforeEach(()=>{server = require('../../index'); })
     afterEach(async()=>{
-        server.close();
-    await Product.remove({})
+        await Product.remove({})
+        await  server.close();
 });
     describe('GET /',() => {
         it('should return all products',async () => {
@@ -25,7 +25,22 @@ describe('/api/products',()=>{
     });
     describe('GET /:id', ()=>{
         it('should return a product if the id is valid',async()=>{
-            const product = new Product({name:'products 1'});
+            const storeId = mongoose.Types.ObjectId().toHexString();
+            const product = new Product({
+                name:'12345',
+                category:'12345',
+                tag:'12345',
+                numberInStock:5,
+                price:'5000',
+                image:'12345',
+                store:{
+                   _id: storeId,
+                   designation: '12345',
+                   adresse:'12345',
+                   phone:'12345',
+                   email:'example01@gmail.com'
+                }
+            });
             await product.save();
             const res = await request(server).get('/api/products/' + product._id);
             expect(res.status).toEqual(200);

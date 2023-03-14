@@ -1,20 +1,45 @@
+const jwt  = require('jsonwebtoken');
+const config  = require('config');
 const asyncMiddleware = require('../middleware/async');
 const validateObjectId = require('../middleware/validateObjectId');
 const admin = require('../middleware/admin');
 const auth = require('../middleware/auth');
 const {Product, validate} = require('../models/products');
+const { Store } = require('../models/store');
 const express = require('express');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const router = express.Router();
 
 
-router.get('/', asyncMiddleware(async (req, res) => {
-  
-    const products = await Product.find().sort('name');
+router.get('/store', asyncMiddleware(async (req, res) => {
+  try {
+    const products = await Product.find().populate({path:'storeProduct'}).sort('name');
+    res.status(200).json({success:true,products});
     res.send(products);
+  } catch (error) {
+    res.status(400).json({success: false, message:error.message});
+  }
+
+ 
 }));
 
+router.get('/customer', asyncMiddleware(async (req, res) => {
+  try {
+    const products = await Product.find().populate({path:'userProduct'}).sort('name');
+    res.status(200).json({success:true,products});
+    res.send(products);
+  } catch (error) {
+    res.status(400).json({success: false, message:error.message});
+  }
+
+ 
+}));
+router.get('/', asyncMiddleware(async (req, res) => {
+  const products = await Product.find().sort('name');
+  res.send(products);
+ 
+}));
 const Storage = multer.diskStorage({
   destination:'uploads',
   filename:(req,file,cb) =>{
@@ -25,9 +50,14 @@ const upload = multer({
   storage: Storage
 }).single('testImage');
 //  [auth, admin]
-router.post('/',[auth,admin], asyncMiddleware(async (req, res) => {
+router.post('/',auth, asyncMiddleware(async (req, res) => {
    const { error } = validate(req.body); 
+   const token = req.header('x-auth-token');
+   const decoded =  jwt.verify(token , config.get('jwtPrivateKey'));
+   req.user = decoded;
+  console.log(req.user);
    if (error) return res.status(400).send(error.details[0].message);
+      
   upload (req,res,(err)=>{
     if (err)  return res.status(400).send(err.details[0].message);
        let product = new Product({
@@ -36,9 +66,12 @@ router.post('/',[auth,admin], asyncMiddleware(async (req, res) => {
         tag: req.body.tag,
         price: req.body.price,
         numberInStock: req.body.numberInStock,
-        image:{
+        image:{ 
           data: req.file.filename,
           contentType:'image/png'
+        },
+        owner:{
+          _id : req.user._id
         }
       })
       product.save()
@@ -46,6 +79,35 @@ router.post('/',[auth,admin], asyncMiddleware(async (req, res) => {
       res.send(product);
   })
 }));
+
+router.post('/store',[auth,admin], asyncMiddleware(async (req, res) => {
+  const { error } = validate(req.body); 
+  const store = await Store.findById(req.body.storeId);
+  if(!store) return res.status(400).send('No store with that given Id');
+  if (error) return res.status(400).send(error.details[0].message);
+  upload (req,res,(err)=>{
+   
+   if (err)  return res.status(400).send(err.details[0].message);
+      let product = new Product({
+       name: req.body.name,
+       category: req.body.category,
+       tag: req.body.tag,
+       price: req.body.price,
+       numberInStock: req.body.numberInStock,
+       image:{ 
+         data: req.file.filename,
+         contentType:'image/png'
+       },
+       store:{
+         _id: store._id
+       }
+     })
+     product.save()
+   
+     res.send(product);
+ })
+}));
+
 //[auth,admin]
 router.put('/:id',[auth,admin], asyncMiddleware(async (req, res) => {
   const { error } = validate(req.body); 

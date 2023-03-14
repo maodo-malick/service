@@ -3,17 +3,23 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest --watchAll --verbose --coverage"
+    "test": "jest --watchAll --verbose",
+    "start": "node index.js"
+  },
+  "engine":{
+    "node":"16.14.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.1.0",
+    "compression": "^1.7.4",
     "config": "^3.3.9",
     "express": "^4.16.2",
     "express-async-errors": "^3.1.1",
     "fawn": "^2.1.5",
+    "helmet": "^6.0.1",
     "joi": "^13.1.0",
     "joi-objectid": "^4.0.2",
     "jsonwebtoken": "^9.0.0",
